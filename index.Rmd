@@ -1,5 +1,4 @@
 ---
-pagetitle: "Final Project"
 title: "How I Found My Next Student Rental Property"
 author: "Dylan McKeighan"
 date: "December 15th, 2021"
