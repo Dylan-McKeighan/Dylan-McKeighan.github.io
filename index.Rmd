@@ -183,7 +183,7 @@ kable(most_pop) %>%
 
 If I am going to find a rental property, these seem like a pretty good place to start looking! These universities **consistently have the greatest amount of students looking for a place to live off-campus.**
 
-# Finding the Property
+# Gathering the Data
 Finding the ideal property was no easy task. Although the web seems to be filled with an enormous amount of real estate data, most of this data is either kept private or is untrustworthy. In order to get my hands on the data I needed, I had to write some code that could scrape one of the most popular real estate websites: [realtor.com](https://www.realtor.com/).  
 *Note: I made sure to check [www.realtor.com/robots.txt](https://www.realtor.com/robots.txt) to ensure that I wasn't scraping pages that are forbiden*
 <br><br>
@@ -242,6 +242,64 @@ df <- df[df$beds < 10,]
 df %>% head(10) %>% kable() %>% kable_styling(latex_options = "striped")
 ```
 
+# What does the current market look like in these cities?
+Here is the median home value and average price per square foot for a **one bedroom property:**
+
+```{r}
+hm <- read_csv("data/housing_metrics_clean")
+
+hm %>% 
+  filter(beds == 1) %>% 
+  group_by(city) %>% 
+  summarise(Number_of_listings = n(),
+            Median_home_value = median(price),
+            Avg_sq_ft = mean(sq_ft),
+            Avg_Price_per_sqft = Median_home_value / Avg_sq_ft) %>% 
+  kableExtra::kable() %>% kable_styling(latex_options = "striped")
+```
+
+**Two bedroom property:**
+
+```{r}
+hm %>% 
+  filter(beds == 2) %>% 
+  group_by(city) %>% 
+  summarise(Number_of_listings = n(),
+            Median_home_value = median(price),
+            Avg_sq_ft = mean(sq_ft),
+            Avg_Price_per_sqft = Median_home_value / Avg_sq_ft) %>% 
+  kableExtra::kable() %>% kable_styling(latex_options = "striped")
+
+```
+
+**Three bedroom property:**
+
+```{r}
+hm %>% 
+  filter(beds == 3) %>% 
+  group_by(city) %>% 
+  summarise(Number_of_listings = n(),
+            Median_home_value = median(price),
+            Avg_sq_ft = mean(sq_ft),
+            Avg_Price_per_sqft = Median_home_value / Avg_sq_ft) %>% 
+  kableExtra::kable() %>% kable_styling(latex_options = "striped")
+```
+
+**Four+ bedroom property:**
+
+```{r}
+hm %>% 
+  filter(beds > 3) %>% 
+  group_by(city) %>% 
+  summarise(Number_of_listings = n(),
+            Median_home_value = median(price),
+            Avg_sq_ft = mean(sq_ft),
+            Avg_Price_per_sqft = Median_home_value / Avg_sq_ft,
+            Avg_beds = mean(beds)) %>% 
+  kableExtra::kable() %>% kable_styling(latex_options = "striped")
+```
+
+# Finding the Property
 When I first set out on this project, I wanted to compare home prices with the average price of rent for one bedroom in each city. This way I could estimate how much I would cash-flow from each property every month. Unfortunately, it wasn't long before I realized that the average price of rent for any size home would be an extremely difficult number to estimate, if at all truly possible. So, instead, I had to rely on the metrics that I already had.  
 I knew that the most profitable home would be the one with the most rooms to rent out and the smallest monthly payment. In other words, I wanted to find which properties would offered me the most rooms at the lowest price. So, I create a new column on my data frame where I divided the price of every home by the number of rooms it has. It is listed here as "return":
 *Note: I decided to filter out all the homes with less than 3 rooms and less than 2 bathrooms.*
@@ -334,4 +392,3 @@ This project was tough, but the results of it are incredibly useful. Even if I d
 
 
 <br><br><br><br><br><br><br><br><br><br><br><br>
-
