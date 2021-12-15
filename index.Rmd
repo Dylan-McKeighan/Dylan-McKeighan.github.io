@@ -1,9 +1,96 @@
 ---
+<<<<<<< HEAD
 title: "My website"
 
+=======
+title: "How I Found My Next Student Rental Property"
+author: "Dylan McKeighan"
+date: "December 15th, 2021"
+>>>>>>> e813be3aa1c9098dd8d84c8c6127c548ca8e4b9d
 output: html_document
 ---
 
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
+<<<<<<< HEAD
+=======
+
+Here is a look at the mean of the adjusted populations for each university since 2009. The schools which are consistently in the Top Ten Most Populous Universities in the country are highlighted in yellow.
+
+```{r}
+most_pop <- df %>% 
+  group_by(campus) %>% 
+  summarise(mean_pop = mean(pop_adjusted)) %>% 
+  arrange(desc(mean_pop))
+
+kable(most_pop) %>% 
+  kable_styling(latex_options = "striped") %>% 
+  row_spec(1:4, background = "yellow") %>% 
+    row_spec(7:8, background = "yellow") %>% 
+    row_spec(10:11, background = "yellow")
+
+```
+
+If I am going to find a rental property, these seem like a pretty good place to start looking! These universities **consistently have the greatest amount of students looking for a place to live off-campus.**
+
+# Finding the Property
+Finding the ideal property was no easy task. Although the web seems to be filled with an enormous amount of real estate data, most of this data is either kept private or is untrustworthy. In order to get my hands on the data I needed, I had to write some code that could scrape one of the most popular real estate websites: [realtor.com](https://www.realtor.com/).  
+*Note: I made sure to check [www.realtor.com/robots.txt](https://www.realtor.com/robots.txt) to ensure that I wasn't scraping pages that are forbiden*
+<br><br>
+Here's a look at the for-loop I created to find the metrics I was looking for:
+
+```{r, eval=FALSE, echo=TRUE}
+library(tidyverse)
+library(rvest)
+
+cities <- c("College-Station_TX", "Orlando_FL", "Miami_FL", "Columbus_OH", 
+            "Gainesville_FL", "Austin_TX", "Minneapolis_MN", "Atlanta_GA",
+            "Tempe_AZ", "Champaign_IL", "Tampa_FL", "East-Lansing_MI",
+            "University-Park_IL", "Bloomington_IN")
+
+df1 = data.frame()
+
+for (city in cities) {
+  city_page = paste0("https://www.realtor.com/realestateandhomes-search/", city, "/beds-1/sqft-500/pg-")
+  
+  for (page_result in 1:8) {
+    
+    link = paste0(city_page, page_result, "")
+    Sys.sleep(time = 10)
+    page = read_html(link)
+    
+    address = page %>% html_nodes(".srp-address-redesign") %>% html_text()
+    price = page %>% html_nodes(".srp-page-price > .bowEcH") %>% html_text()
+    beds = page %>% html_nodes(".srp_list:nth-child(1)") %>% html_text()
+    baths = page %>% html_nodes(".srp_list:nth-child(2)") %>% html_text()
+    sq_ft = page %>% html_nodes(".srp_list:nth-child(3)") %>% html_text()
+    location = rep(city, length(address))
+    
+    df1 = rbind(df1, data.frame(address, price, beds, baths, sq_ft, location,
+                                stringsAsFactors = FALSE))
+    
+    print(paste("Page:", page_result))
+    
+    Sys.sleep(time = 5)
+  }
+  
+  Sys.sleep(time=20)
+  
+  
+}
+
+write_csv(df1, file = "data/realtor.csv")
+
+```
+
+The beautiful thing about this code is that, with permission from Realtor.com, I will always have access to the most updated real estate listings from these eight cities in one neat and concise data frame. What would normally take hours of shuffling through page after page of search results, and manually imputing data into an excel spreadsheet, now takes minutes. Those few lines of code allow me to access hundreds of up-to-date real estate listings in an easy-to-read format that I can manipulate to find the results I am looking for.  
+Here's what it looks like:
+```{r}
+df <- read_csv("data/housing_metrics_clean")
+df <- df[df$beds < 10,] 
+df %>% head(10) %>% kable() %>% kable_styling(latex_options = "striped")
+```
+
+What I am most concerned with, is how much profit I can rent out each 
+>>>>>>> e813be3aa1c9098dd8d84c8c6127c548ca8e4b9d
