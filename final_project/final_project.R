@@ -510,30 +510,45 @@ write.csv(housing_metrics, file = "data/housing_metrics_clean", row.names = FALS
 ##### Testing Realtor.com data #####
 df <- read_csv("data/housing_metrics_clean")
 df <- df[df$beds < 10,]
+df <- df[df$beds >2,]
+df <- df[df$baths > 1.5,]
 
-one_bed <-  df[df$beds == 1,]
-two_bed <-  df[df$beds == 2,]
-three_bed <-  df[df$beds == 3,]
-four_bed <-  df[df$beds == 4,]
-five_plus_bed <- df[df$beds > 4,]
+options("scipen" = 10)
+options()$scipen
 
-avg_price_one_bed <- one_bed %>% 
-  group_by(city) %>% 
-  summarise(avg_sale_price = mean(price),
-            num = n())
+df$return <- df$price / df$beds
 
-avg_price_two_bed <- two_bed %>% 
-  group_by(city) %>% 
-  summarise(avg_sale_price = mean(price),
-            num = n())
-
-avg_price_three_bed <- three_bed %>% 
-  group_by(city) %>% 
-  summarise(avg_sale_price = mean(price),
-            num = n())
+df$return <- as.numeric(formatC(df$return, digits = 2, format = "f"))
 
 df <- df %>% 
-  arrange(price)
+  arrange(return)
 
-three_bed <- df %>% 
-  filter(beds > 2, baths > 1)
+df$city %>% unique()
+top_8 <- c("Orlando", "College_Station", "Miami", "Columbus", 
+           "Gainesville", "Austin", "Minneapolis", "Tempe")
+top_8 <- df %>% 
+  filter(city %in% top_8)
+
+top_8[18,]
+
+df1 <- read_csv("./data/population.csv")
+tx <- df1 %>% 
+  filter(campus == "Texas A&M University")
+library(modelr)
+
+tx$year_finish <- as.numeric(tx$year_finish)
+tx$pop <- as.numeric(tx$pop)
+mod <- glm(data = tx,
+    formula = pop ~ year_finish)
+mod %>% summary()
+
+add_predictions(tx, mod) %>% 
+  ggplot(aes(x=year_finish,y=pop)) +
+  geom_point() + 
+  geom_smooth(method="lm",se=FALSE,linetype=2,alpha=.25) +
+  geom_point(aes(y=pred),color="red") 
+
+tx %>% 
+  ggplot(aes(x=year_finish, y=pop)) +
+  geom_point() +
+  geom_smooth(method = loess)

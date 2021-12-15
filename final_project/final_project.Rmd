@@ -7,6 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+options("scipen" = 10)
+options()$scipen
 ```
 
 
@@ -231,12 +233,105 @@ write_csv(df1, file = "./../data/realtor.csv")
 
 ```
 
-The beautiful thing about this code is that, with permission from Realtor.com, I will always have access to the most updated real estate listings from these eight cities in one neat and concise data frame. What would normally take hours of shuffling through page after page of search results, and manually imputing data into an excel spreadsheet, now takes minutes. Those few lines of code allow me to access hundreds of up-to-date real estate listings in an easy-to-read format that I can manipulate to find the results I am looking for.  
+The beautiful thing about this code is that, with permission from Realtor.com, I will always have access to the most updated real estate listings from these fourteen cities in one neat and concise data frame. What would normally take hours of shuffling through page after page of search results, and manually imputing data into an excel spreadsheet, now takes minutes. Those few lines of code allow me to access thousands of up-to-date real estate listings in an easy-to-read format that I can manipulate to find the results I am looking for.  
 Here's what it looks like:
+
 ```{r}
 df <- read_csv("./../data/housing_metrics_clean")
 df <- df[df$beds < 10,] 
 df %>% head(10) %>% kable() %>% kable_styling(latex_options = "striped")
 ```
 
-What I am most concerned with, is how much profit I can rent out each 
+When I first set out on this project, I wanted to compare home prices with the average price of rent for one bedroom in each city. This way I could estimate how much I would cash-flow from each property every month. Unfortunately, it wasn't long before I realized that the average price of rent for any size home would be an extremely difficult number to estimate, if at all truly possible. So, instead, I had to rely on the metrics that I already had.  
+I knew that the most profitable home would be the one with the most rooms to rent out and the smallest monthly payment. In other words, I wanted to find which properties would offered me the most rooms at the lowest price. So, I create a new column on my data frame where I divided the price of every home by the number of rooms it has. It is listed here as "return":
+*Note: I decided to filter out all the homes with less than 3 rooms and less than 2 bathrooms.*
+
+```{r}
+df <- read_csv("./../data/housing_metrics_clean")
+df <- df[df$beds < 10,]
+df <- df[df$beds >2,]
+df <- df[df$baths > 1.5,]
+
+df$return <- df$price / df$beds
+
+df$return <- as.numeric(formatC(df$return, digits = 2, format = "f"))
+
+df <- df %>% 
+  arrange(return)
+
+df %>% head(10) %>% kable() %>% kable_styling(latex_options = "striped")
+
+```
+<br>
+You're telling me there are properties listed for $1?? You bet I'm checking this out!
+<br><br>
+
+![](Screen Shot 2021-12-15 at 12.55.35 AM.png)
+
+<br><br>
+Hmmm... I don't know how appealing this will be to potential tenants... better keep looking!  
+That 6 bed home in Champaign looks interesting... better take a look!
+
+<br><br>
+
+![](Screen Shot 2021-12-15 at 1.06.22 AM.png)
+![](Screen Shot 2021-12-15 at 1.06.41 AM.png)
+![](Screen Shot 2021-12-15 at 1.07.04 AM.png)
+
+# Ta Da!
+Now that's more like it! It looks like this home has been on the market for a few months, but the owners are now facing foreclosure and recently dropped the price to what it is. The home has 6 bedrooms, 2 bathrooms, as well as two kitchens, a two-car garage, a new roof, and some new renovations! Plus, it's only a 9 minute drive to the University of Illinois at Urbana–Champaign! After 12 months of renting out each room at $400 a room, I would be bringing in an estimated \$1,777 a month (assuming a 20% down payment and a 30-year-loan with a fixed interest rate of 3.16%), while acquiring equity in the property. I think this is the deal I am looking for!
+
+# One more thought
+What about that list of eight schools that consistently made the Top 10 Most Populous Schools over the last 12 years? University of Illinois wasn't on it. Maybe I should narrow the list of properties to only those near these schools.
+
+```{r}
+top_8 <- c("Orlando", "College_Station", "Miami", "Columbus", 
+           "Gainesville", "Austin", "Minneapolis", "Tempe")
+top_8 <- df %>% 
+  filter(city %in% top_8)
+kableExtra::kable(head(top_8, 10)) %>% kableExtra::kable_styling(latex_options = "striped")
+```
+
+All of these properties look like they need some additional work, I'll keep looking down the list for something a little more... up-to-code...  
+Found one!
+
+```{r}
+top_8[18,]
+```
+
+Here's the corresponding page on Realtor.com:
+<br>
+
+![](Screen Shot 2021-12-15 at 1.50.49 AM.png)
+![](Screen Shot 2021-12-15 at 1.51.16 AM.png)
+![](Screen Shot 2021-12-15 at 1.51.27 AM.png)
+
+This condo is listed at /$135,000. It includes 4 beds (each with its own private bathroom), a pool, a volleyball court, and is within walking distance to Texas A&M! Sounds like an easy pitch to an Aggie! At \$500 a room, this property would cash-flow \$988 month while generating equity over-time. And with the Texas A & M undergraduate population growing the way it has been, there will always be students looking for a sweet place to live near campus. 
+
+```{r}
+df1 <- read_csv("./../data/population.csv")
+tx <- df1 %>% 
+  filter(campus == "Texas A&M University")
+library(modelr)
+
+mod <- glm(data = tx,
+    formula = pop ~ year_finish)
+
+add_predictions(tx, mod) %>% 
+  ggplot(aes(x=year_finish,y=pop)) +
+  geom_point() + 
+  geom_smooth(method="lm",se=FALSE,linetype=2,alpha=.25) +
+  geom_point(aes(y=pred),color="red") +
+  theme_minimal() +
+  labs(x = "Population", y="Year", title = "Texas A&M Undergraduate Population", subtitle = "Actual population shown in black, predicted population in red")
+```
+
+# Wrapping it up
+This project was tough, but the results of it are incredibly useful. Even if I decide to wait before investing into real estate, as long as I have access to this code, I can come back years from now and, with the push of a button, have the most up-to-date real estate listings from these areas. I have come to appreciate how powerful the Rvest package can be! With a few tweaks, this whole system could become totally automated to the point where any city could be scraped from a number of websites (imagine doing this with the MLS!). Now, its time to make me some money...  
+
+
+
+
+
+<br><br><br><br><br><br><br><br><br><br><br><br>
+
